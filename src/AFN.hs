@@ -22,7 +22,17 @@ concatenar m1 m2 = m1 { estados    = estados m1 `S.union` estados m2'
                    , transicoes = S.map (mapT (+es1Size)) $ transicoes m2
                    }
 
-union m1 m2 = undefined
+union m1 m2 = m3{estadoAtual = fechoVazio m3}
+    where m1' = atualizarAFN 1 m1
+          m2' = atualizarAFN 1 $ ajustarIndices m1 m2
+          m3  = AFN { estados     = S.insert 0 $ estados m1' `S.union` estados m2'
+                    , estadoAtual = fechoVazio m3  
+                    , aceitacao   = aceitacao m1' `S.union` aceitacao m2'
+                    , inicio      = 0
+                    , transicoes  = S.fromList [TransVazia 0 $ inicio m1', TransVazia 0 $ inicio m2'] 
+                                    `S.union` transicoes m1' 
+                                    `S.union` transicoes m2' 
+                    }
 
 {-- Algoritmo simples para implementar o fecho de Kleene (estrela) é o seguinte:
     1. Some 1 aos identificadores de todos os estados e transações do Autômato FN; 
@@ -64,5 +74,22 @@ delta m q i = S.map destino . S.filter cond . transicoes $ m
     where cond (TransVazia _ _) = True
           cond (Trans i' q' _)  = i == i' && q == q'
 
+ajustarIndices :: Ord a => AFN a -> AFN a -> AFN a
+ajustarIndices m1 m2 = atualizarAFN s1 m2
+    where s1 = S.size $ estados m1
+
+atualizarAFN :: Ord a => Int -> AFN a -> AFN a
+atualizarAFN n m = m { estados    = es
+                     , aceitacao  = fs
+                     , transicoes = ts
+                     , inicio     = n
+                     }
+    where es = S.map (+n) $ estados m
+          fs = S.map (+n) $ aceitacao m
+          ts = S.map (mapT (+n)) $ transicoes m
+
 fechoVazio :: Ord a => AFN a -> Set Int
-fechoVazio m = undefined 
+fechoVazio m = S.map destino $ S.filter (\t -> vazia t && origem t == e) ts
+    where e  = inicio m
+          ts = transicoes m
+
