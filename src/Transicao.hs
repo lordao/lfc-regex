@@ -20,3 +20,7 @@ entrada _ = Nothing
 mapT :: (e -> e) -> Transicao a e -> Transicao a e
 mapT f (TransVazia o d) = TransVazia (f o) (f d)
 mapT f (Trans e o d) = Trans e (f o) (f d)
+
+vazia :: Transicao a e -> Bool
+vazia (TransVazia _ _) = True
+vazia _                = False
