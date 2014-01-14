@@ -11,5 +11,9 @@ executable lfc-regex
                    base >= 4,
                    containers >=0.5.0 && <0.6
   ghc-options:     -Wall
-  other-modules:   Regex
+  other-modules:   
+                   Regex,
+                   AFD,
+                   Conversor,
+                   MonadicSet
 
