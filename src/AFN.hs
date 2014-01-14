@@ -1,9 +1,9 @@
 module AFN where
-import Data.List (foldl')
-import MonadicSet (Set)
+import           Data.List  (foldl')
+import           MonadicSet (Set)
 import qualified MonadicSet as S
-import Regex
-import Transicao
+import           Regex
+import           Transicao
 
 data AFN a = AFN { estados       :: Set Int
                  , estadosAtuais :: Set Int
@@ -114,7 +114,7 @@ fechoVazio' m = fv S.empty
 
 executar :: Ord a => AFN a -> Set a -> [a] -> Maybe (Bool, AFN a)
 executar m sigma = foldl' p (Just (False,m))
-    where p mb i | i `S.notMember` sigma = Nothing 
+    where p mb i | i `S.notMember` sigma = Nothing
                  | otherwise = do (_,m) <- mb
                                   let m' = passo m i
                                   return (aceitaEstados m', m')
