@@ -1,7 +1,7 @@
 module AFN where
-import Data.List (foldl1')
-import Data.Set (Set)
-import qualified Data.Set as S
+import Data.List (foldl')
+import MonadicSet (Set)
+import qualified MonadicSet as S
 import Regex
 import Transicao
 
@@ -86,20 +86,6 @@ single a = AFN { estados       = S.fromAscList [0,1]
                , transicoes    = S.singleton $ Trans a 0 1
                }
 
-aceita :: Ord a => AFN a -> [a] -> Bool
-aceita m =  any (`S.member` aceitacao m) . S.toList . executar m
-
-executar :: Ord a => AFN a -> [a] -> Set Int
-executar m = estadosAtuais . foldl passo m
-
-passo :: Ord a => AFN a -> a -> AFN a
-passo m i = m { estadosAtuais = foldl1' S.union . map (delta m i) . S.toList $ estadosAtuais m }
-
-delta :: Ord a => AFN a -> a -> Int -> Set Int
-delta m i q = S.map destino . S.filter cond $ transicoes m
-    where cond (TransVazia _ _) = True
-          cond (Trans i' q' _)  = i == i' && q == q'
-
 ajustarIndices :: Ord a => AFN a -> AFN a -> AFN a
 ajustarIndices m1 = atualizarAFN s1
     where s1 = S.size $ estados m1
@@ -116,7 +102,32 @@ atualizarAFN n m = m' { estadosAtuais = fechoVazio m' }
                  }
 
 fechoVazio :: Ord a => AFN a -> Set Int
-fechoVazio m = S.map destino $ S.filter (\t -> vazia t && origem t == e) ts
-    where e  = inicio m
-          ts = transicoes m
+fechoVazio m = fechoVazio' m $ inicio m
 
+fechoVazio' :: Ord a => AFN a -> Int -> Set Int
+fechoVazio' m = fv S.empty
+    where fv visited q
+              | S.null toVisit = visited
+              | otherwise      = toVisit S.>>= fv (visited `S.union` toVisit)
+              where toVisit  = S.map destino . S.filter filtro $ transicoes m
+                    filtro t = vazia t && origem t == q && destino t `S.notMember` visited
+
+executar :: Ord a => AFN a -> Set a -> [a] -> Maybe (Bool, AFN a)
+executar m sigma = foldl' p (Just (False,m))
+    where p mb i | i `S.notMember` sigma = Nothing 
+                 | otherwise = do (_,m) <- mb
+                                  let m' = passo m i
+                                  return (aceitaEstados m', m')
+
+aceitaEstados :: AFN a -> Bool
+aceitaEstados m = not . S.null $ estadosAtuais m `S.intersection` aceitacao m
+
+passo :: Ord a => AFN a -> a -> AFN a
+passo m i = m { estadosAtuais = qs S.>>= delta m i }
+    where qs = estadosAtuais m
+
+delta :: Ord a => AFN a -> a -> Int -> Set Int
+delta m i q = qs `S.union` (qs S.>>= fechoVazio' m)
+    where qs = S.map destino . S.filter filtro $ transicoes m
+          filtro (Trans i' q' _) = i' == i && q' == q
+          filtro _               = False
