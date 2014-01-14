@@ -28,9 +28,10 @@ de (:.) seja maior do que a de (:+).
 >infixr 5 :.
 >infixr 4 :+
 
->alfabeto :: Ord a => Regex a -> Set a
->alfabeto Vazia       = S.empty
->alfabeto (Literal a)  = S.singleton a
->alfabeto (r1 :. r2)  = alfabeto r1 `S.union` alfabeto r2
->alfabeto (r1 :+ r2) = alfabeto r1 `S.union` alfabeto r2
->alfabeto (Kleene r) = alfabeto r
+>class Ord a => TipoRegex a where
+>   palavraVazia :: a
+>   
+>
+>
+>instance TipoRegex Char where
+>   palavraVazia = 'E'
