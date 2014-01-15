@@ -7,7 +7,9 @@ O trabalho consiste em desenvolver um programa capaz de ler uma expressão regul
 
 Esta implementação não está concluída.
 
-TODO:
+
+TODO
+----
 
 1. Ler uma String e transformar no tipo algébrico Regex;
 2. Transformar as transições não-determinísticas em determinísticas;
